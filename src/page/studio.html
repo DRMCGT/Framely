@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Background Studio</title>
+  <link rel="stylesheet" href="./studio.css" />
+  <script type="module" src="./guard.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">◧</div>
+      <span>Video Background Studio</span>
+      <span class="badge">100% local • no upload</span>
+    </div>
+    <div class="top-actions">
+      <span class="muted" style="font-size:12px">MP4 H.264 + AAC</span>
+      <button id="themeToggle" class="btn-ghost" aria-label="Toggle theme">◐ Theme</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Upload row -->
+    <div class="grid-two">
+      <div class="card">
+        <h2>Background image</h2>
+        <div id="dropBg" class="dropzone" tabindex="0" role="button" aria-label="Upload background image">
+          <div class="dz-icon">🖼️</div>
+          <div class="dz-title">Drop background image</div>
+          <div class="dz-sub">JPG / PNG / WebP</div>
+          <img id="bgPreview" class="preview-thumb" alt="Background preview" />
+          <div id="bgMeta" class="dz-meta"></div>
+        </div>
+        <div class="inline-row" style="margin-top:10px">
+          <label class="btn btn-secondary" for="inputBg">Choose image</label>
+          <button id="clearBg" class="btn btn-secondary hidden">Remove</button>
+          <span class="muted">Cover-scaled to fill canvas</span>
+        </div>
+        <input id="inputBg" type="file" accept="image/png,image/jpeg,image/webp,image/jpg" hidden />
+        <div class="url-row">
+          <input id="urlBg" type="url" class="url-input" placeholder="…or paste image link (https://…/bg.jpg)" inputmode="url" />
+          <button id="fetchBg" class="btn btn-secondary">Fetch</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Video</h2>
+        <div id="dropVideo" class="dropzone" tabindex="0" role="button" aria-label="Upload video">
+          <div class="dz-icon">🎬</div>
+          <div class="dz-title">Drop video</div>
+          <div class="dz-sub">MP4 (H.264) recommended</div>
+          <video id="videoPreview" class="preview-thumb" muted playsinline preload="metadata"></video>
+          <div id="videoMeta" class="dz-meta"></div>
+        </div>
+        <div class="inline-row" style="margin-top:10px">
+          <label class="btn btn-secondary" for="inputVideo">Choose video</label>
+          <button id="clearVideo" class="btn btn-secondary hidden">Remove</button>
+          <span id="videoInfo" class="muted"></span>
+        </div>
+        <input id="inputVideo" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" hidden />
+        <div class="url-row">
+          <input id="urlVideo" type="url" class="url-input" placeholder="…or paste video / X-post link" inputmode="url" />
+          <button id="fetchVideo" class="btn btn-secondary">Fetch</button>
+        </div>
+        <div id="xVariants" class="variant-list hidden"></div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <!-- Controls + Live preview -->
+    <div class="grid-two">
+      <div class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+          <div class="control-group">
+            <div class="control-row">
+              <label class="control-label" for="radius">Border radius</label>
+              <span id="radiusVal" class="control-value">10px</span>
+            </div>
+            <input id="radius" type="range" min="0" max="50" value="10" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-row">
+              <label class="control-label" for="scale">Video scale</label>
+              <span id="scaleVal" class="control-value">85%</span>
+            </div>
+            <input id="scale" type="range" min="50" max="95" value="85" />
+            <span class="muted" style="font-size:11px">Percent of canvas the video occupies</span>
+          </div>
+
+          <div class="toggle-row">
+            <span class="control-label">Shadow</span>
+            <div id="shadowToggle" class="switch on" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div id="shadowGroup" class="control-group">
+            <div class="control-row">
+              <label class="control-label" for="shadowIntensity">Shadow intensity</label>
+              <span id="shadowVal" class="control-value">24</span>
+            </div>
+            <input id="shadowIntensity" type="range" min="0" max="60" value="24" />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="control-group">
+            <label class="control-label" for="resolution">Output resolution</label>
+            <select id="resolution">
+              <option value="1080p">1080p (1920×1080)</option>
+              <option value="1440p">1440p (2560×1440)</option>
+              <option value="4k">4K (3840×2160)</option>
+              <option value="source">Same as source video</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="quality">Quality</label>
+            <select id="quality">
+              <option value="fast">Fast — smaller file</option>
+              <option value="balanced" selected>Balanced</option>
+              <option value="high">High — larger file</option>
+            </select>
+            <span class="muted" style="font-size:11px">Controls CRF / preset and audio bitrate</span>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Output format</label>
+            <div class="badge" style="width:fit-content">MP4 (H.264 + AAC) — v1</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; display:grid; gap:10px">
+          <button id="generateBtn" class="btn btn-primary" disabled>Generate Video</button>
+          <div id="progressWrap" class="progress-wrap">
+            <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+            <div class="progress-meta">
+              <span id="progressStage">Idle</span>
+              <span id="progressPct">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Live preview</h2>
+        <div class="preview-stage" id="previewStage">
+          <div id="previewPlaceholder" class="placeholder">Upload a video and background to see preview<br><span class="muted">Rounded corners, shadow, and scale update live</span></div>
+          <canvas id="previewCanvas" class="hidden" width="1280" height="720"></canvas>
+        </div>
+        <div class="muted" style="margin-top:8px">Preview uses the same Canvas compositor as export — WYSIWYG.</div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="card">
+      <h2>Result</h2>
+      <div class="preview-stage" id="resultStage">
+        <div id="resultPlaceholder" class="placeholder">Generated video will appear here</div>
+        <video id="resultVideo" class="hidden" controls playsinline></video>
+      </div>
+      <div class="inline-row" style="margin-top:12px">
+        <button id="downloadBtn" class="btn btn-primary hidden">⬇ Download MP4</button>
+        <span id="resultInfo" class="muted"></span>
+      </div>
+    </div>
+
+    <!-- Hidden work canvas + video for processing -->
+    <canvas id="workCanvas" class="canvas-hidden"></canvas>
+    <video id="workVideo" class="canvas-hidden" muted playsinline crossorigin="anonymous"></video>
+  </main>
+
+  <script type="module" src="./studio.js"></script>
+</body>
+</html>

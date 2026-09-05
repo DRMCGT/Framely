@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Video Background Studio",
+  "version": "1.0.0",
+  "description": "Center your screen recording on a background with rounded corners and soft shadow — 100% client-side, no upload.",
+  "action": {
+    "default_title": "Open Video Background Studio"
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "permissions": ["storage", "unlimitedStorage", "scripting", "tabs"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' http: https:;"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["vendor/ffmpeg/*", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
