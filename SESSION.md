@@ -89,6 +89,28 @@ Single geometry source: `computeVideoRect()` in `src/lib/compositor.js`
 - Auto-play/fullscreen injector for X (needs `scripting` — already granted).
 - Release 1.1: version bump, changelog, checklist refresh.
 
+## Product & licensing decisions (roadmap session)
+
+**Business model: open core.**
+- The MVP ships fully open source. Everything currently in the repo (Canvas compositor, single-pass FFmpeg overlay pipeline, direct-URL import, X/Twitter extractor) stays free and open source indefinitely — this is the product's core trust argument ("100% local, auditable code") and must not be paywalled.
+- License: recommend AGPL-3.0 for the open core (same choice as Cap.so, the closest direct comp — an open-source Loom alternative with local editing free and cloud/AI features paid). AGPL specifically discourages someone standing up a closed-source hosted competitor without contributing back. Confirm final license choice before the first public release; not yet finalized.
+- Paid features are anything that costs *us* money to run (cloud compute or third-party API calls) — that's the actual dividing line, not "premium UI" or feature-gating things that already run free locally. Planned paid-tier candidates (not yet built, roadmap only): cloud rendering for long/heavy videos, AI-generated background images, hosted sharing links for generated results, team/brand-preset collaboration features.
+- Decision: stay a Chrome extension, do not pivot to a centralized SaaS downloader. Rationale: a user's own browser fetching content the user already has access to (direct link, or the existing X extractor, or screen-capturing what's already rendering on their own screen) carries meaningfully less legal exposure than operating a centralized server that fetches and redistributes third-party video content at scale. A paid account/cloud layer can sit behind the free extension for the paid features above without requiring the whole product to become server-centric.
+
+**"Any site" video import roadmap:**
+- Keep the existing X/Twitter extractor as-is (network-hook based). Do **not** extend the same active-scraping approach to YouTube, TikTok, Instagram, or Facebook — Chrome Web Store policy is explicit against extensions that circumvent those platforms' download restrictions, and this is the highest-risk area for the whole extension getting rejected or delisted.
+- New approach for "any other site": `chrome.tabCapture`. This records on-screen pixels the user is already viewing (same legal category as any screen recorder, e.g. Loom/Cap/the tab-recording extension the user already uses daily) rather than extracting a protected file — meaningfully lower risk, and platform-agnostic by construction (works identically regardless of which site is playing the video).
+- Known trade-off to keep in mind when scoping this: tab recording is real-time (a 45s clip takes 45s to capture) and the tab generally needs to stay active/visible while recording — more friction than the instant X extractor, but it removes the need to build and maintain a per-platform scraper for every new site.
+- Planned implementation, in order:
+  1. **MVP of this feature:** record the full tab via `chrome.tabCapture`, then let the user manually crop a rectangle around the video region in the Studio (reuse `computeVideoRect`/the existing Canvas compositor — this is just cropping a rectangle out of the recording before the existing background/rounded-corner/shadow pipeline runs on it). No page content-script changes needed for this version.
+  2. **Later improvement:** auto-detect the on-page `<video>` element's `getBoundingClientRect()` via a content script and crop that region live during capture, so the user doesn't have to draw the crop box manually. Deferred until the manual-crop version is validated with real users — has more edge cases (scroll mid-recording, ads covering the player, fullscreen transitions).
+- Sequencing: ship the open-source MVP (current pipeline + X extractor) first. `tabCapture` (manual-crop version) is the next feature after MVP launch, ahead of any paid cloud features.
+
+**Download/export improvements (post-MVP, already discussed, lower priority than the above):**
+- Replace `<a download>` with `chrome.downloads.download()` for more reliable saves with conflict handling — note: this is purely a save-reliability improvement and has no bearing on Web Store review risk (that risk lives entirely in how source video is acquired, not how the output file is saved).
+- `showSaveFilePicker()` for user-chosen destination/filename.
+- Batch export queue + "download all as ZIP" (JSZip) once multi-video workflows (e.g. from the X extractor) are common enough to justify it.
+
 ## Conventions learned the hard way
 
 - Load `dist/`, never root, as unpacked extension; `npm run build` then
