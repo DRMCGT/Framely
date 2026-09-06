@@ -1,4 +1,4 @@
-// Video Background Studio - background service worker
+// Framely - background service worker
 // Opens (or focuses) the full studio tab on icon click.
 // Never does video processing here — SW is event-driven and dies after ~30s.
 

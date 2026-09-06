@@ -1,4 +1,4 @@
-// Video Background Studio - constants
+// Framely - constants
 // Centralized presets so UI and logic stay in sync.
 
 export const RESOLUTION_PRESETS = {

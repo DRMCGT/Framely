@@ -1,4 +1,4 @@
-// Video Background Studio - guard.js
+// Framely - guard.js
 // Externalized from inline <script> to satisfy MV3 CSP (script-src 'self' 'wasm-unsafe-eval').
 // Catches the "Failed to resolve module specifier" error when src/ is loaded unbundled
 // (should be dist/) and shows actionable status instead of silent broken UI.
@@ -11,7 +11,7 @@ window.addEventListener('error', function (e) {
       el.textContent = 'Bundle not built — run "npm install && npm run build" then Load unpacked from dist/ (not project root). See README.';
       el.className = 'status show error';
     }
-    console.error('[VBS] Bare import error — you loaded src/ instead of dist/. Build first and load dist/.', e);
+    console.error('[Framely] Bare import error — you loaded src/ instead of dist/. Build first and load dist/.', e);
   }
 });
 

@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Video Background Studio",
+  "name": "Framely",
   "version": "1.0.0",
   "description": "Center your screen recording on a background with rounded corners and soft shadow — 100% client-side, no upload.",
   "action": {
-    "default_title": "Open Video Background Studio"
+    "default_title": "Open Framely"
   },
   "background": {
     "service_worker": "src/background.js"

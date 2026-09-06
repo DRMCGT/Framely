@@ -1,4 +1,4 @@
-// Video Background Studio - x-extract.js
+// Framely - x-extract.js
 // Studio-side orchestration for X/Twitter extraction:
 // open tweet tab -> inject bridge (isolated) + hook (MAIN world) ->
 // collect MP4 variants -> close tab. No servers, no API keys — the user's own
@@ -91,11 +91,11 @@ export async function extractXVariants(statusUrl, opts = {}) {
   let injectedOnce = false;
 
   const onMsg = (msg) => {
-    if (!msg || msg.target !== 'vbs-studio') return;
+    if (!msg || msg.target !== 'framely-studio') return;
     if (msg.kind === 'x-note') {
       if (msg.pageState) pageState = msg.pageState;
       if (msg.stats) lastStats = msg.stats;
-      console.log('[VBS] x-hook note:', msg.detail || '', msg.stats || '', `page=${msg.pageState || '?'}`);
+      console.log('[Framely] x-hook note:', msg.detail || '', msg.stats || '', `page=${msg.pageState || '?'}`);
       return;
     }
     if (msg.kind !== 'x-variants') return;
@@ -115,7 +115,7 @@ export async function extractXVariants(statusUrl, opts = {}) {
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['src/content/x-main-hook.js'], world: 'MAIN' });
       if (!injectedOnce) {
         injectedOnce = true;
-        console.log('[VBS] x-hook injected into tab', tab.id);
+        console.log('[Framely] x-hook injected into tab', tab.id);
       }
     } catch {
       // Tab not ready yet or navigating — the onUpdated re-inject covers it.
@@ -153,7 +153,7 @@ export async function extractXVariants(statusUrl, opts = {}) {
       }
       throw new Error(`No video found in that post ${summary} — it may be text-only or age-gated. Open it and check, then retry.`);
     }
-    console.log(`[VBS] x-extract: ${variants.length} variant(s) via ${layer}`);
+    console.log(`[Framely] x-extract: ${variants.length} variant(s) via ${layer}`);
     onStatus(`Found ${variants.length} version${variants.length > 1 ? 's' : ''} — pick one below.`);
     return variants;
   } finally {

@@ -1,9 +1,9 @@
-# SESSION.md — Framely (Video Background Studio) build log
+# SESSION.md — Framely build log
 
 Chrome MV3 extension. Centers a screen recording on a background image with
 rounded corners + soft shadow. 100% client-side (Canvas + FFmpeg.wasm,
 single-thread core bundled in `vendor/ffmpeg/`). Remote:
-https://github.com/DRMCGT/Video-BS
+https://github.com/DRMCGT/Framely
 
 ## Architecture (current)
 

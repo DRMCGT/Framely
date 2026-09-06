@@ -1,4 +1,4 @@
-// Video Background Studio - ffmpeg-worker.js
+// Framely - ffmpeg-worker.js
 // FFmpeg.wasm wrapper (single-thread core, bundled locally).
 // Responsibilities: load FFmpeg, extract audio from original, transcode/mux to MP4 H.264+AAC.
 // No geometry filters — Canvas owns compositing.
@@ -48,24 +48,24 @@ export async function getFFmpeg(onProgress) {
     // Quick fetch HEAD check (logs, does not block load if fails)
     try {
       const r = await fetch(coreURLRaw, { method: 'HEAD' });
-      console.log('[VBS] ffmpeg core HEAD', r.status, r.headers.get('content-type'), coreURLRaw);
+      console.log('[Framely] ffmpeg core HEAD', r.status, r.headers.get('content-type'), coreURLRaw);
       if (!r.ok) throw new Error(`core fetch failed HTTP ${r.status}`);
     } catch (e) {
-      console.warn('[VBS] core preflight failed', e);
+      console.warn('[Framely] core preflight failed', e);
     }
     try {
       const r = await fetch(wasmURLRaw, { method: 'HEAD' });
-      console.log('[VBS] ffmpeg wasm HEAD', r.status, r.headers.get('content-type'), wasmURLRaw);
+      console.log('[Framely] ffmpeg wasm HEAD', r.status, r.headers.get('content-type'), wasmURLRaw);
       if (!r.ok) throw new Error(`wasm fetch failed HTTP ${r.status}`);
     } catch (e) {
-      console.warn('[VBS] wasm preflight failed', e);
+      console.warn('[Framely] wasm preflight failed', e);
     }
 
     const workerURLRaw = isExtension
       ? chrome.runtime.getURL('vendor/ffmpeg/worker.js')
       : '/vendor/ffmpeg/worker.js';
 
-    console.log('[VBS] loading FFmpeg', { isExtension, coreURL: coreURLRaw, wasmURL: wasmURLRaw, workerURL: workerURLRaw });
+    console.log('[Framely] loading FFmpeg', { isExtension, coreURL: coreURLRaw, wasmURL: wasmURLRaw, workerURL: workerURLRaw });
 
     // Verify worker and its ESM deps fetchable before load (helps diagnose packaging regressions)
     // worker.js imports ./const.js and ./errors.js relatively — all must be siblings in vendor/ffmpeg/
@@ -79,10 +79,10 @@ export async function getFFmpeg(onProgress) {
     for (const url of depsToCheck) {
       try {
         const r = await fetch(url, { method: 'HEAD' });
-        console.log('[VBS] ffmpeg dep HEAD', r.status, r.headers.get('content-type'), url);
+        console.log('[Framely] ffmpeg dep HEAD', r.status, r.headers.get('content-type'), url);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
       } catch (e) {
-        console.warn('[VBS] dep preflight failed', url, e);
+        console.warn('[Framely] dep preflight failed', url, e);
         // Fail fast with actionable message instead of silent hang
         if (url.endsWith('const.js') || url.endsWith('errors.js')) {
           loadingPromise = null;
@@ -113,9 +113,9 @@ export async function getFFmpeg(onProgress) {
           classWorkerURL: workerURLRaw
         });
       }
-      console.log('[VBS] FFmpeg loaded');
+      console.log('[Framely] FFmpeg loaded');
     } catch (e) {
-      console.error('[VBS] FFmpeg load failed raw', e, e && e.stack, typeof e, JSON.stringify(e, Object.getOwnPropertyNames(e || {})));
+      console.error('[Framely] FFmpeg load failed raw', e, e && e.stack, typeof e, JSON.stringify(e, Object.getOwnPropertyNames(e || {})));
       const msg = (e && (e.message || e.toString())) || JSON.stringify(e) || String(typeof e);
       // reset loadingPromise so retry is possible
       loadingPromise = null;
@@ -143,7 +143,7 @@ export function resolveVideoQuality(quality, duration, outputW, outputH) {
   const bigFrame = outputW && outputH && outputW * outputH > 1920 * 1080;
   if ((longClip || bigFrame) && base.preset !== 'veryfast' && base.preset !== 'ultrafast') {
     const why = [longClip && 'long clip', bigFrame && 'high res'].filter(Boolean).join('+');
-    console.log(`[VBS] preset auto-drop: ${base.preset}→veryfast (${why}; CRF ${base.crf} and audio ${base.audioBitrate} unchanged)`);
+    console.log(`[Framely] preset auto-drop: ${base.preset}→veryfast (${why}; CRF ${base.crf} and audio ${base.audioBitrate} unchanged)`);
     return { ...base, preset: 'veryfast' };
   }
   return base;
@@ -176,7 +176,7 @@ export async function extractAudio(originalBlob, quality = 'balanced', onProgres
   } catch (e) {
     // No audio track (or undecodable audio) is valid — caller takes silent path.
     // (ffmpeg.wasm exec throws Emscripten exit() objects on failure paths.)
-    console.log('[VBS] audio extract: none (no audio track in source)');
+    console.log('[Framely] audio extract: none (no audio track in source)');
     try { await ffmpeg.deleteFile(inName); } catch {}
     return null;
   }
@@ -186,12 +186,12 @@ export async function extractAudio(originalBlob, quality = 'balanced', onProgres
     const out = await ffmpeg.readFile(outName);
     if (out && out.length > 1024) {
       audioData = out;
-      console.log(`[VBS] audio extract: ${out.length} bytes via aac re-encode (${qualityCfg.audioBitrate})`);
+      console.log(`[Framely] audio extract: ${out.length} bytes via aac re-encode (${qualityCfg.audioBitrate})`);
     } else {
-      console.log(`[VBS] audio extract: none (silent source, got ${out ? out.length : 'null'} bytes)`);
+      console.log(`[Framely] audio extract: none (silent source, got ${out ? out.length : 'null'} bytes)`);
     }
   } catch {
-    console.log('[VBS] audio extract: none (read failed — silent source)');
+    console.log('[Framely] audio extract: none (read failed — silent source)');
     audioData = null;
   }
 
@@ -219,7 +219,7 @@ async function runExecWithWatchdog(ffmpeg, args, onProgress, label) {
   const execStart = Date.now();
   const heartbeat = setInterval(() => {
     const elapsed = ((Date.now() - execStart) / 1000).toFixed(1);
-    console.log(`[VBS] heartbeat ${label} — elapsed ${elapsed}s, last progress ${lastProgress}%, args: ${args.join(' ')}`);
+    console.log(`[Framely] heartbeat ${label} — elapsed ${elapsed}s, last progress ${lastProgress}%, args: ${args.join(' ')}`);
   }, 3000);
 
   const NO_PROGRESS_TIMEOUT_MS = 90_000;
@@ -252,7 +252,7 @@ async function runExecWithWatchdog(ffmpeg, args, onProgress, label) {
     clearInterval(stallTimer);
     ffmpeg.off('progress', progressHandler);
     const total = ((Date.now() - execStart) / 1000).toFixed(1);
-    console.log(`[VBS] ffmpeg exec finished (${label}) — total ${total}s, last progress ${lastProgress}%`);
+    console.log(`[Framely] ffmpeg exec finished (${label}) — total ${total}s, last progress ${lastProgress}%`);
   }
 }
 
@@ -289,7 +289,7 @@ export async function compositePipeline({ bgPngBlob, maskPngBlob, originalBlob, 
   ffmpeg.off('log', logSniffer);
   const hasAudio = !!audioCodec;
   const copyAudio = audioCodec === 'aac';
-  console.log(`[VBS] source streams: audio=${audioCodec || 'none'} → ${!hasAudio ? 'silent (-an)' : copyAudio ? 'copy' : 'aac re-encode'}`);
+  console.log(`[Framely] source streams: audio=${audioCodec || 'none'} → ${!hasAudio ? 'silent (-an)' : copyAudio ? 'copy' : 'aac re-encode'}`);
 
   const tFlag = duration && isFinite(duration) && duration > 0 ? String(duration.toFixed(2)) : null;
   // alphamerge gives the scaled video true rounded alpha from the mask —
@@ -318,7 +318,7 @@ export async function compositePipeline({ bgPngBlob, maskPngBlob, originalBlob, 
   if (tFlag) args.push('-t', tFlag);
   args.push(outName);
 
-  console.log('[VBS] ffmpeg composite', args.join(' '), `bg=${bgPngBlob.size} bytes, mask=${maskPngBlob.size} bytes, src=${originalBlob.size} bytes, rect=${rect.x},${rect.y} ${rect.w}x${rect.h} r=${rect.r}, fps=${srcFps} t=${tFlag} preset=${qualityCfg.preset} crf=${qualityCfg.crf}`);
+  console.log('[Framely] ffmpeg composite', args.join(' '), `bg=${bgPngBlob.size} bytes, mask=${maskPngBlob.size} bytes, src=${originalBlob.size} bytes, rect=${rect.x},${rect.y} ${rect.w}x${rect.h} r=${rect.r}, fps=${srcFps} t=${tFlag} preset=${qualityCfg.preset} crf=${qualityCfg.crf}`);
 
   if (onProgress) onProgress({ stage: 'compositing', pct: 5 });
   await runExecWithWatchdog(ffmpeg, args, ({ pct }) => {
@@ -365,7 +365,7 @@ export async function muxToMP4({ silentBlob, audioData, outputW, outputH, qualit
     await ffmpeg.writeFile(audioName, audioData);
     hasAudio = true;
   }
-  console.log(`[VBS] mux branch: ${hasAudio ? 'audio' : 'silent'} (audioBytes=${audioData ? audioData.length : 0})`);
+  console.log(`[Framely] mux branch: ${hasAudio ? 'audio' : 'silent'} (audioBytes=${audioData ? audioData.length : 0})`);
 
   // Build FFmpeg args — robust against infinite-duration inputs.
   // Our pipeline is canvas-based (no -loop 1), so no infinite image stream exists,
@@ -437,11 +437,11 @@ export async function muxToMP4({ silentBlob, audioData, outputW, outputH, qualit
   let execStart = Date.now();
   heartbeat = setInterval(() => {
     const elapsed = ((Date.now() - execStart) / 1000).toFixed(1);
-    console.log(`[VBS] heartbeat mux still running — elapsed ${elapsed}s, last progress ${lastProgress}%, args: ${args.join(' ')}`);
+    console.log(`[Framely] heartbeat mux still running — elapsed ${elapsed}s, last progress ${lastProgress}%, args: ${args.join(' ')}`);
   }, 3000);
 
   // Also log full command for debugging -loop/-shortest
-  console.log('[VBS] ffmpeg exec', args.join(' '), `silent=${silentBlob.type} ${silentBlob.size} bytes, hasAudio=${hasAudio}, audioBytes=${audioData ? audioData.length : 0}, output ${outputW}x${outputH} fps=${fps} t=${tFlag} preset=${qualityCfg.preset} crf=${qualityCfg.crf}`);
+  console.log('[Framely] ffmpeg exec', args.join(' '), `silent=${silentBlob.type} ${silentBlob.size} bytes, hasAudio=${hasAudio}, audioBytes=${audioData ? audioData.length : 0}, output ${outputW}x${outputH} fps=${fps} t=${tFlag} preset=${qualityCfg.preset} crf=${qualityCfg.crf}`);
 
   // Progress-based watchdog: fail only when exec makes NO progress for a long
   // stretch (true stall, e.g. waiting on a phantom input). An absolute timer
@@ -480,7 +480,7 @@ export async function muxToMP4({ silentBlob, audioData, outputW, outputH, qualit
     clearInterval(stallTimer);
     ffmpeg.off('progress', progressHandler);
     const total = ((Date.now() - execStart) / 1000).toFixed(1);
-    console.log(`[VBS] ffmpeg exec finished — total ${total}s, last progress ${lastProgress}%`);
+    console.log(`[Framely] ffmpeg exec finished — total ${total}s, last progress ${lastProgress}%`);
   }
 
   const outData = await ffmpeg.readFile(outName);

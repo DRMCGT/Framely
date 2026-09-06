@@ -1,4 +1,4 @@
-// Video Background Studio - compositor.js
+// Framely - compositor.js
 // Canvas compositing: background (cover) + rounded-corners clip + soft shadow.
 // Same function is used for live preview (single frame) and export (frame loop).
 // Never uses FFmpeg filters for geometry — that path is fragile.

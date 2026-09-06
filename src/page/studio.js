@@ -1,4 +1,4 @@
-// Video Background Studio - studio.js
+// Framely - studio.js
 // Main UI wiring. No inline wasm here — delegates to compositor.js & ffmpeg-worker.js.
 
 import { RESOLUTION_PRESETS, DEFAULTS, SOFT_SIZE_WARN_BYTES } from '../lib/constants.js';
@@ -81,14 +81,14 @@ const state = {
 
 // --- Theme ---
 function initTheme() {
-  const saved = localStorage.getItem('vbs-theme');
+  const saved = localStorage.getItem('framely-theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
   themeToggle.addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     const isDark = cur ? cur === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
     const next = isDark ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('vbs-theme', next);
+    localStorage.setItem('framely-theme', next);
   });
 }
 initTheme();
@@ -433,14 +433,14 @@ generateBtn.addEventListener('click', async () => {
     showProgress(5, 'Loading encoder…');
     await getFFmpeg().catch(e => {
       const raw = e && (e.message || String(e)) || JSON.stringify(e) || String(typeof e);
-      console.error('[VBS] getFFmpeg failed', e, e && e.stack);
+      console.error('[Framely] getFFmpeg failed', e, e && e.stack);
       throw new Error('Failed to load encoder: ' + raw);
     });
 
     // Measure the source fps — the export preserves it exactly (no re-timing).
     showProgress(8, 'Reading video…');
     const srcFps = await detectSourceFps(videoPreview);
-    console.log('[VBS] source', { videoW, videoH, videoDuration, srcFps, outputW, outputH });
+    console.log('[Framely] source', { videoW, videoH, videoDuration, srcFps, outputW, outputH });
 
     // Single static background still with a transparent rounded window.
     // The original video is overlaid through that window in ONE ffmpeg pass,
@@ -464,7 +464,7 @@ generateBtn.addEventListener('click', async () => {
     // square and the radius setting is lost in the export.
     const maskPngBlob = await renderVideoMask(rect);
     if (maskPngBlob.size < 100) throw new Error('Mask render failed — try again.');
-    console.log('[VBS] background still', { bytes: bgPngBlob.size, maskBytes: maskPngBlob.size, rect });
+    console.log('[Framely] background still', { bytes: bgPngBlob.size, maskBytes: maskPngBlob.size, rect });
 
     // Single-pass composite (15→99, 100 reserved for the explicit 'done')
     const onCompProgress = ({ stage, pct }) => {
@@ -498,7 +498,7 @@ generateBtn.addEventListener('click', async () => {
     downloadBtn.onclick = () => {
       const a = document.createElement('a');
       a.href = resultBlobUrl;
-      a.download = `vbs-${Date.now()}.mp4`;
+      a.download = `framely-${Date.now()}.mp4`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -508,7 +508,7 @@ generateBtn.addEventListener('click', async () => {
     showStatus('Video generated — preview above. Click Download to save.', 'info');
 
   } catch (e) {
-    console.error('[VBS] pipeline failed', e, e && e.stack);
+    console.error('[Framely] pipeline failed', e, e && e.stack);
     let msg = (e && (e.message || String(e))) || JSON.stringify(e) || String(typeof e);
     if (msg.includes('memory') || msg.includes('OOM') || msg.includes('abort')) {
       msg = 'Out of memory — the file is too large for this device. Try 1080p, a shorter clip, or close other tabs and retry.';

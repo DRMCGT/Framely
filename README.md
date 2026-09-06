@@ -1,4 +1,4 @@
-# Video Background Studio — Chrome Extension (MV3)
+# Framely — Chrome Extension (MV3)
 
 Center a screen recording on a background image with rounded corners and soft shadow. **100% client-side** — no upload, no server. Single-pass pipeline: Canvas stills + FFmpeg.wasm overlay to MP4 H.264 + AAC, preserving the source's fps, duration, and audio.
 
@@ -85,7 +85,7 @@ npm run dev  # http://localhost:5173/src/page/studio.html
 2. Adjust radius/scale/shadow — preview is WYSIWYG
 3. Pick resolution (1080p default) and quality (Balanced; long clips auto-drop to a faster preset, logged)
 4. Generate — single composite pass; result plays inline
-5. Download — file is `vbs-<timestamp>.mp4`, playable in VLC/QuickTime
+5. Download — file is `framely-<timestamp>.mp4`, playable in VLC/QuickTime
 
 ## Limits & Errors
 - Soft warn >200MB; no hard block — if browser struggles, retry at 1080p or shorter clip. Threshold is tunable after real-memory testing.

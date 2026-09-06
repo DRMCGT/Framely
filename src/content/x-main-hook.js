@@ -1,4 +1,4 @@
-/* Video Background Studio - x-main-hook.js
+/* Framely - x-main-hook.js
  * Runs in the PAGE's MAIN world (not the isolated content-script world) so it
  * can observe the same API responses and player state the X page itself uses.
  * Plain classic script — no imports/exports (injected via scripting.executeScript).
@@ -15,11 +15,11 @@
  * Plus: auto-play driver (triggers lazy loads) and heartbeat/stats notes so a
  * failure is diagnosable instead of generic.
  *
- * Pure parsing lives in __vbsXHook.extractMp4Variants() so it stays unit-testable.
+ * Pure parsing lives in __framelyXHook.extractMp4Variants() so it stays unit-testable.
  * Every page interaction is guarded — never break the host page.
  */
 (function () {
-  var NS = 'VBS_X_HOOK';
+  var NS = 'FRAMELY_X_HOOK';
   var SCAN_MS = 15000;
 
   var stats = { apiJson: 0, xhrJson: 0, embeddedScans: 0, videoEls: 0 };
@@ -27,7 +27,7 @@
 
   function post(msg) {
     try {
-      window.postMessage({ __vbs: NS, type: msg.type, variants: msg.variants || null, layer: msg.layer || null, detail: msg.detail || null, stats: msg.stats || null, pageState: msg.pageState || pageState() }, '*');
+      window.postMessage({ __framely: NS, type: msg.type, variants: msg.variants || null, layer: msg.layer || null, detail: msg.detail || null, stats: msg.stats || null, pageState: msg.pageState || pageState() }, '*');
     } catch (e) { /* never break the host page */ }
   }
 
@@ -93,7 +93,7 @@
 
   // Exposed for the node unit-test harness (harmless on the page).
   try {
-    window.__vbsXHook = { extractMp4Variants: extractMp4Variants, pickVariants: pickVariants };
+    window.__framelyXHook = { extractMp4Variants: extractMp4Variants, pickVariants: pickVariants };
   } catch (e) {}
 
   function emitIfAny(variants, layer) {
@@ -148,7 +148,7 @@
       var OrigXHR = window.XMLHttpRequest;
       var origOpen = OrigXHR.prototype.open;
       OrigXHR.prototype.open = function () {
-        try { this.__vbsUrl = arguments.length > 1 ? arguments[1] : ''; } catch (e) {}
+        try { this.__framelyUrl = arguments.length > 1 ? arguments[1] : ''; } catch (e) {}
         return origOpen.apply(this, arguments);
       };
       var origSend = OrigXHR.prototype.send;

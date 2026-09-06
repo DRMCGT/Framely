@@ -1,4 +1,4 @@
-// Video Background Studio - url-import.js
+// Framely - url-import.js
 // Fetch a direct media URL (video/image) into a File for the existing pipeline.
 // Platform watch/share links (YouTube/X/Facebook posts) are NOT downloadable
 // client-side (no CORS, ciphered streams, platform ToS) — those are detected

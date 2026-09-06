@@ -1,4 +1,4 @@
-// Video Background Studio - file-utils.js
+// Framely - file-utils.js
 // Drag/drop, validation, metadata, objectURL lifecycle. No FFmpeg/Canvas here.
 
 import { SOFT_SIZE_WARN_BYTES, RECOMMENDED_MAX_DIM } from './constants.js';
