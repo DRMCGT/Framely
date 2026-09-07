@@ -1,3 +1,5 @@
+<img src="icons/icon128.png" width="96" alt="Framely icon" />
+
 # Framely 🎬
 
 Give any screen recording a studio look: centered on a background image with rounded corners and a soft shadow. A Chrome extension (Manifest V3) that renders everything **100% client-side** — no upload, no server, no account.
